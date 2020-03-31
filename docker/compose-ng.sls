@@ -49,16 +49,16 @@ include:
     {%- endfor %}
   {%- endif %}
   {%- if 'ports' in container and container.ports is iterable %}
-    - ports:
+    - port_bindings:
     {%- for port_mapping in container.ports %}
       {%- if port_mapping is string %}
         {%- set mapping = port_mapping.split(':',2) %}
         {%- if mapping|length < 2 %}
       - "{{ mapping[0] }}"
+        {%- elif mapping|length > 2 %}
+      - "{{ mapping[0] }}:{{ mapping[1] }}:{{ mapping[-1] }}
         {%- else %}
-      - "{{ mapping[-1] }}/tcp":
-            HostPort: "{{ mapping[-2] }}"
-            HostIp: "{{ mapping[-3]|d('') }}"
+      - "{{ mapping[0] }}:{{ mapping[-1] }}"
         {%- endif %}
       {%- elif port_mapping is mapping %}
       - {{ port_mapping }}
@@ -66,9 +66,14 @@ include:
     {%- endfor %}
   {%- endif %}
   {%- if 'volumes' in container %}
-    - volumes:
+    - binds:
     {%- for volume in container.volumes %}
-      - {{ volume }}
+      {%- set mapping = volume.rsplit(':', 1) %}
+      {%- if mapping|length > 1 %}
+        - "{{ mapping[0] }}:{{ mapping[-1] }}"
+      {%- else %}
+        - "{{ mapping[0] }}"
+      {%- endif %}
     {%- endfor %}
   {%- endif %}
   {%- if 'volumes_from' in container %}
