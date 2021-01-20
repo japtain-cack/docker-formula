@@ -125,6 +125,15 @@ include:
                 {%- endif %}
             {%- endfor %}
         {%- endif %}
+        {%- if 'network_mode' in container %}
+            {%- set mapping = container.network_mode.rsplit(':', 1) %}
+            {%- if mapping|length > 1 %}
+                {% set mode = mapping[0] + ':' + mapping[-1] %}
+            {%- else %}
+                {% set mode = mapping[0] %}
+            {%- endif %}
+    - network_mode: {{ mode|string }}
+        {%- endif %}
     - require:
       - docker_image: {{ formula }}-compose-ng-{{ id }}-present
         {%- if required_containers is defined %}
